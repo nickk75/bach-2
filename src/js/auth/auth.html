@@ -3,7 +3,7 @@
     <div class="row">
 
       <div class="col-md-6 offset-md-3 col-xs-12">
-        <h1 class="text-xs-center" ng-bind="::$ctrl.authType"></h1>
+        <h1 class="text-xs-center" ng-bind="::$ctrl.authType" style="text-transform:capitalize"></h1>
         <p class="text-xs-center">
           <a ui-sref="app.login"
             ng-show="$ctrl.authType === 'register'">

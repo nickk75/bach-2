@@ -37975,11 +37975,11 @@ exports.default = AppRun;
 "use strict";
 
 angular.module("templates", []).run(["$templateCache", function ($templateCache) {
-  $templateCache.put("auth/auth.html", "<div class=\"auth-page\">\r\n  <div class=\"container page\">\r\n    <div class=\"row\">\r\n\r\n      <div class=\"col-md-6 offset-md-3 col-xs-12\">\r\n        <h1 class=\"text-xs-center\" ng-bind=\"::$ctrl.authType\"></h1>\r\n        <p class=\"text-xs-center\">\r\n          <a ui-sref=\"app.login\"\r\n            ng-show=\"$ctrl.authType === \'register\'\">\r\n            Have an account?\r\n          </a>\r\n          <a ui-sref=\"app.register\"\r\n            ng-show=\"$ctrl.authType === \'login\'\">\r\n            Need an account?\r\n          </a>\r\n        </p>\r\n\r\n        <form>\r\n          <fieldset>\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"text\"\r\n                placeholder=\"Username\"\r\n                ng-model=\"$ctrl.formData.username\" />\r\n            </fieldset>\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"email\"\r\n                placeholder=\"Email\"\r\n                ng-model=\"$ctrl.formData.email\" />\r\n            </fieldset>\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"password\"\r\n                placeholder=\"Password\"\r\n                ng-model=\"$ctrl.formData.password\" />\r\n            </fieldset>\r\n\r\n            <button class=\"btn btn-lg btn-primary pull-xs-right\"\r\n              type=\"submit\">\r\n              Register\r\n            </button>\r\n\r\n          </fieldset>\r\n        </form>\r\n      </div>\r\n\r\n    </div>\r\n  </div>\r\n</div>");
-  $templateCache.put("layout/app-view.html", "<app-header></app-header>\r\n\r\n<div ui-view></div>\r\n\r\n<app-footer></app-footer>\r\n");
-  $templateCache.put("layout/footer.html", "<footer>\r\n  <div class=\"container\">\r\n    <a class=\"logo-font\" ui-sref=\"app.home\" ng-bind=\"::$ctrl.appName | lowercase\"></a>\r\n    <span class=\"attribution\">\r\n      &copy; {{::$ctrl.date | date:\'yyyy\'}}.\r\n      Designed by Nikos Konstantinidis. Code Licensed under MIT\r\n    </span>\r\n  </div>\r\n</footer>\r\n");
-  $templateCache.put("layout/header.html", "<nav class=\"navbar navbar-light\">\r\n  <div class=\"container\">\r\n\r\n    <a class=\"navbar-brand\"\r\n      ui-sref=\"app.home\"\r\n      ng-bind=\"::$ctrl.appName | lowercase\">\r\n    </a>\r\n\r\n    <!-- Show this for logged out users -->\r\n    <ul show-authed=\"false\"\r\n      class=\"nav navbar-nav pull-xs-right\">\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.home\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Home</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.login\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Login</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.register\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Sign up</button>\r\n        </a>\r\n      </li>\r\n\r\n    </ul>\r\n\r\n    <!-- Show this for logged in users -->\r\n    <ul show-authed=\"true\"\r\n      class=\"nav navbar-nav pull-xs-right\">\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.home\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Home</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.newtest\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">New Test</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.settings\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Settings</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.profile({ username: $ctrl.currentUser.username})\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">{{ $ctrl.currentUser.username }}</button>\r\n        </a>\r\n      </li>\r\n\r\n    </ul>\r\n\r\n\r\n  </div>\r\n</nav>\r\n");
-  $templateCache.put("home/home.html", " <div class=\"home-page\">\r\n\r\n  <!-- Splash banner that only shows when not logged in -->\r\n  <div class=\"banner\" show-authed=\"false\">\r\n    <div class=\"container\">\r\n      <h1 class=\"logo-font\" ng-bind=\"::$ctrl.appName | lowercase\"></h1>\r\n      <p>A place to share your knowledge.</p>\r\n    </div>\r\n  </div>\r\n\r\n  <div class=\"container page\">\r\n    <div class=\"row\">\r\n\r\n\r\n      <!-- Main view - contains tabs & article list -->\r\n      <div class=\"col-md-9\">\r\n        <!-- Tabs for toggling between feed, article lists -->\r\n        <div class=\"feed-toggle\">\r\n          <ul class=\"nav nav-pills outline-active\">\r\n\r\n            <li class=\"nav-item\" show-authed=\"true\">\r\n              <a href=\"\" class=\"nav-link active\">\r\n                Your Feed\r\n              </a>\r\n            </li>\r\n\r\n            <li class=\"nav-item\">\r\n              <a href=\"\" class=\"nav-link\">\r\n                Global Feed\r\n              </a>\r\n            </li>\r\n\r\n          </ul>\r\n        </div>\r\n\r\n        <!-- List the current articles -->\r\n        <div class=\"article-preview\">\r\n          <div class=\"article-meta\">\r\n            <a href=\"\"><img /></a>\r\n            <div class=\"info\">\r\n              <a href=\"\" class=\"author\">BradGreen</a>\r\n              <span class=\"date\">January 20th</span>\r\n            </div>\r\n            <button class=\"btn btn-outline-primary btn-sm pull-xs-right\">\r\n              <i class=\"ion-heart\"></i> 29\r\n            </button>\r\n          </div>\r\n          <a href=\"\" class=\"preview-link\">\r\n            <h1>How to build Angular apps that scale</h1>\r\n            <p>Building web applications is not an easy task. It\'s even hard to make ones that scale.</p>\r\n            <span>Read more...</span>\r\n            <ul class=\"tag-list\">\r\n              <li class=\"tag-default tag-pill tag-outline\">programming</li>\r\n              <li class=\"tag-default tag-pill tag-outline\">web</li>\r\n            </ul>\r\n          </a>\r\n        </div>\r\n\r\n      </div>\r\n\r\n      <!-- Sidebar where popular tags are listed -->\r\n      <div class=\"col-md-3\">\r\n        <div class=\"sidebar\">\r\n\r\n          <p>Popular Tags</p>\r\n\r\n          <div class=\"tag-list\">\r\n            <a href=\"\" class=\"tag-default tag-pill\">\r\n              Tag One\r\n            </a>\r\n            <a href=\"\" class=\"tag-default tag-pill\">\r\n              Tag Two\r\n            </a>\r\n          </div>\r\n\r\n        </div>\r\n      </div>\r\n\r\n      <!-- End the row & container divs -->\r\n    </div>\r\n  </div>\r\n\r\n</div>\r\n");
+  $templateCache.put("auth/auth.html", "<div class=\"auth-page\">\n  <div class=\"container page\">\n    <div class=\"row\">\n\n      <div class=\"col-md-6 offset-md-3 col-xs-12\">\n        <h1 class=\"text-xs-center\" ng-bind=\"::$ctrl.authType\" style=\"text-transform:capitalize\"></h1>\n        <p class=\"text-xs-center\">\n          <a ui-sref=\"app.login\"\n            ng-show=\"$ctrl.authType === \'register\'\">\n            Have an account?\n          </a>\n          <a ui-sref=\"app.register\"\n            ng-show=\"$ctrl.authType === \'login\'\">\n            Need an account?\n          </a>\n        </p>\n\n        <form>\n          <fieldset>\n\n            <fieldset class=\"form-group\">\n              <input class=\"form-control form-control-lg\"\n                type=\"text\"\n                placeholder=\"Username\"\n                ng-model=\"$ctrl.formData.username\" />\n            </fieldset>\n\n            <fieldset class=\"form-group\">\n              <input class=\"form-control form-control-lg\"\n                type=\"email\"\n                placeholder=\"Email\"\n                ng-model=\"$ctrl.formData.email\" />\n            </fieldset>\n\n            <fieldset class=\"form-group\">\n              <input class=\"form-control form-control-lg\"\n                type=\"password\"\n                placeholder=\"Password\"\n                ng-model=\"$ctrl.formData.password\" />\n            </fieldset>\n\n            <button class=\"btn btn-lg btn-primary pull-xs-right\"\n              type=\"submit\">\n              Register\n            </button>\n\n          </fieldset>\n        </form>\n      </div>\n\n    </div>\n  </div>\n</div>");
+  $templateCache.put("home/home.html", " <div class=\"home-page\">\n\n  <!-- Splash banner that only shows when not logged in -->\n  <div class=\"banner\" show-authed=\"false\">\n    <div class=\"container\">\n      <h1 class=\"logo-font\" ng-bind=\"::$ctrl.appName | lowercase\"></h1>\n      <p>A place to share your knowledge.</p>\n    </div>\n  </div>\n\n  <div class=\"container page\">\n    <div class=\"row\">\n\n\n      <!-- Main view - contains tabs & article list -->\n      <div class=\"col-md-9\">\n        <!-- Tabs for toggling between feed, article lists -->\n        <div class=\"feed-toggle\">\n          <ul class=\"nav nav-pills outline-active\">\n\n            <li class=\"nav-item\" show-authed=\"true\">\n              <a href=\"\" class=\"nav-link active\">\n                Your Feed\n              </a>\n            </li>\n\n            <li class=\"nav-item\">\n              <a href=\"\" class=\"nav-link\">\n                Global Feed\n              </a>\n            </li>\n\n          </ul>\n        </div>\n\n        <!-- List the current articles -->\n        <div class=\"article-preview\">\n          <div class=\"article-meta\">\n            <a href=\"\"><img /></a>\n            <div class=\"info\">\n              <a href=\"\" class=\"author\">BradGreen</a>\n              <span class=\"date\">January 20th</span>\n            </div>\n            <button class=\"btn btn-outline-primary btn-sm pull-xs-right\">\n              <i class=\"ion-heart\"></i> 29\n            </button>\n          </div>\n          <a href=\"\" class=\"preview-link\">\n            <h1>How to build Angular apps that scale</h1>\n            <p>Building web applications is not an easy task. It\'s even hard to make ones that scale.</p>\n            <span>Read more...</span>\n            <ul class=\"tag-list\">\n              <li class=\"tag-default tag-pill tag-outline\">programming</li>\n              <li class=\"tag-default tag-pill tag-outline\">web</li>\n            </ul>\n          </a>\n        </div>\n\n      </div>\n\n      <!-- Sidebar where popular tags are listed -->\n      <div class=\"col-md-3\">\n        <div class=\"sidebar\">\n\n          <p>Popular Tags</p>\n\n          <div class=\"tag-list\">\n            <a href=\"\" class=\"tag-default tag-pill\">\n              Tag One\n            </a>\n            <a href=\"\" class=\"tag-default tag-pill\">\n              Tag Two\n            </a>\n          </div>\n\n        </div>\n      </div>\n\n      <!-- End the row & container divs -->\n    </div>\n  </div>\n\n</div>\n");
+  $templateCache.put("layout/app-view.html", "<app-header></app-header>\n\n<div ui-view></div>\n\n<app-footer></app-footer>\n");
+  $templateCache.put("layout/footer.html", "<footer>\n  <div class=\"container\">\n    <a class=\"logo-font\" ui-sref=\"app.home\" ng-bind=\"::$ctrl.appName | lowercase\"></a>\n    <span class=\"attribution\">\n      &copy; {{::$ctrl.date | date:\'yyyy\'}}.\n      Designed by Nikos Konstantinidis. Code Licensed under MIT\n    </span>\n  </div>\n</footer>\n");
+  $templateCache.put("layout/header.html", "<nav class=\"navbar navbar-light\">\n  <div class=\"container\">\n\n    <a class=\"navbar-brand\"\n      ui-sref=\"app.home\"\n      ng-bind=\"::$ctrl.appName | lowercase\">\n    </a>\n\n    <!-- Show this for logged out users -->\n    <ul show-authed=\"false\"\n      class=\"nav navbar-nav pull-xs-right\">\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.login\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Login</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.register\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Register</button>\n        </a>\n      </li>\n\n    </ul>\n\n    <!-- Show this for logged in users -->\n    <ul show-authed=\"true\"\n      class=\"nav navbar-nav pull-xs-right\">\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.home\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Home</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.newtest\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">New Test</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.settings\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Settings</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.profile({ username: $ctrl.currentUser.username})\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">{{ $ctrl.currentUser.username }}</button>\n        </a>\n      </li>\n\n    </ul>\n\n\n  </div>\n</nav>\n");
 }]);
 
 },{}],13:[function(require,module,exports){
@@ -38153,11 +38153,68 @@ var _angular = require('angular');
 
 var _angular2 = _interopRequireDefault(_angular);
 
+var _user = require('./user.service');
+
+var _user2 = _interopRequireDefault(_user);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Create the module where our functionality can attach to
 var servicesModule = _angular2.default.module('app.services', []);
 
+servicesModule.service('User', _user2.default);
+
 exports.default = servicesModule;
 
-},{"angular":3}]},{},[4]);
+},{"./user.service":20,"angular":3}],20:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var User = function () {
+	User.$inject = ["AppConstants", "$http"];
+	function User(AppConstants, $http) {
+		'ngInject';
+
+		_classCallCheck(this, User);
+
+		this._AppConstants = AppConstants;
+		this._$http = $http;
+
+		// Object to store our user properties
+		// Starts as null until the user logs in
+		this.current = null;
+	}
+
+	_createClass(User, [{
+		key: 'attemptAuth',
+		value: function attemptAuth(type, credentials) {
+			var _this = this;
+
+			var route = type === 'login' ? '/login' : '';
+			return $http({
+				url: AppConstants.api + '/users' + route,
+				method: 'POST',
+				data: {
+					user: credentials
+				}
+			}).then(function (res) {
+				_this.current = res.data.user;
+
+				return res;
+			});
+		}
+	}]);
+
+	return User;
+}();
+
+exports.default = User;
+
+},{}]},{},[4]);
