@@ -13,6 +13,8 @@ import './components';
 import './home';
 import './layout';
 import './services';
+import './settings';
+import './testeditor';
 
 
 // Create and bootstrap application
@@ -23,7 +25,9 @@ const requires = [
   'app.components',
   'app.home',
   'app.layout',
-  'app.services'
+  'app.services',
+  'app.settings',
+  'app.testeditor'
 ];
 
 // Mount on window for testing

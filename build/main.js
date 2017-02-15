@@ -37780,6 +37780,10 @@ require('./layout');
 
 require('./services');
 
+require('./settings');
+
+require('./testeditor');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Create and bootstrap application
@@ -37788,7 +37792,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 
 // Import our app config files
-var requires = ['ui.router', 'templates', 'app.auth', 'app.components', 'app.home', 'app.layout', 'app.services'];
+var requires = ['ui.router', 'templates', 'app.auth', 'app.components', 'app.home', 'app.layout', 'app.services', 'app.settings', 'app.testeditor'];
 
 // Mount on window for testing
 
@@ -37805,7 +37809,7 @@ _angular2.default.bootstrap(document, ['app'], {
   strictDi: true
 });
 
-},{"./auth":7,"./components":8,"./config/app.config":9,"./config/app.constants":10,"./config/app.run":11,"./config/app.templates":12,"./home":15,"./layout":18,"./services":19,"angular":3,"angular-ui-router":1}],5:[function(require,module,exports){
+},{"./auth":7,"./components":8,"./config/app.config":11,"./config/app.constants":12,"./config/app.run":13,"./config/app.templates":14,"./home":17,"./layout":20,"./services":21,"./settings":25,"./testeditor":28,"angular":3,"angular-ui-router":1}],5:[function(require,module,exports){
 'use strict';
 
 AuthConfig.$inject = ["$stateProvider", "$httpProvider"];
@@ -37821,12 +37825,24 @@ function AuthConfig($stateProvider, $httpProvider) {
     url: '/',
     controller: 'AuthCtrl as $ctrl',
     templateUrl: 'auth/auth.html',
-    title: 'Sign in'
+    title: 'Sign in',
+    // Don't show the pages if user is logged in
+    resolve: {
+      auth: ["User", function auth(User) {
+        return User.ensureAuthIs(false);
+      }]
+    }
   }).state('app.register', {
     url: '/register',
     controller: 'AuthCtrl as $ctrl',
     templateUrl: 'auth/auth.html',
-    title: 'Sign up'
+    title: 'Sign up',
+    // Don't show the pages if user is logged in
+    resolve: {
+      auth: ["User", function auth(User) {
+        return User.ensureAuthIs(false);
+      }]
+    }
   });
 };
 
@@ -37836,20 +37852,45 @@ exports.default = AuthConfig;
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+	value: true
 });
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var AuthCtrl = function AuthCtrl($state) {
-  'ngInject';
+var AuthCtrl = function () {
+	AuthCtrl.$inject = ["User", "$state"];
+	function AuthCtrl(User, $state) {
+		'ngInject';
 
-  _classCallCheck(this, AuthCtrl);
+		_classCallCheck(this, AuthCtrl);
 
-  this.title = $state.current.title;
-  this.authType = $state.current.name.replace('app.', '');
-};
-AuthCtrl.$inject = ["$state"];
+		this._User = User;
+		this._$state = $state;
+
+		this.title = $state.current.title;
+		this.authType = $state.current.name.replace('app.', '');
+	}
+
+	_createClass(AuthCtrl, [{
+		key: 'submitForm',
+		value: function submitForm() {
+			var _this = this;
+
+			this.isSubmitting = true;
+
+			this._User.attemptAuth(this.authType, this.formData).then(function (res) {
+				_this._$state.go('app.home');
+			}, function (err) {
+				_this.isSubmitting = false;
+				_this.errors = err.data.errors;
+			});
+		}
+	}]);
+
+	return AuthCtrl;
+}();
 
 exports.default = AuthCtrl;
 
@@ -37896,13 +37937,82 @@ var _angular = require('angular');
 
 var _angular2 = _interopRequireDefault(_angular);
 
+var _listErrors = require('./list-errors.component');
+
+var _listErrors2 = _interopRequireDefault(_listErrors);
+
+var _showAuthed = require('./show-authed.directive');
+
+var _showAuthed2 = _interopRequireDefault(_showAuthed);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var componentsModule = _angular2.default.module('app.components', []);
 
+// Components (and directives)
+
+componentsModule.component('listErrors', _listErrors2.default);
+
+componentsModule.directive('showAuthed', _showAuthed2.default);
+
 exports.default = componentsModule;
 
-},{"angular":3}],9:[function(require,module,exports){
+},{"./list-errors.component":9,"./show-authed.directive":10,"angular":3}],9:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+var ListErrors = {
+	bindings: {
+		errors: '='
+	},
+	templateUrl: 'components/list-errors.html'
+};
+
+exports.default = ListErrors;
+
+},{}],10:[function(require,module,exports){
+'use strict';
+
+ShowAuthed.$inject = ["User"];
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+// Directive determines if the user is logged in or not
+function ShowAuthed(User) {
+  'ngInject';
+
+  return {
+    restrict: 'A',
+    link: function link(scope, element, attrs) {
+      scope.User = User;
+
+      scope.$watch('User.current', function (val) {
+        // If user detected
+        if (val) {
+          if (attrs.showAuthed === 'true') {
+            element.css({ display: 'inherit' });
+          } else {
+            element.css({ display: 'none' });
+          }
+
+          // no user detected
+        } else {
+          if (attrs.showAuthed === 'true') {
+            element.css({ display: 'none' });
+          } else {
+            element.css({ display: 'inherit' });
+          }
+        }
+      });
+    }
+  };
+}
+
+exports.default = ShowAuthed;
+
+},{}],11:[function(require,module,exports){
 'use strict';
 
 AppConfig.$inject = ["$httpProvider", "$stateProvider", "$locationProvider", "$urlRouterProvider"];
@@ -37928,21 +38038,22 @@ function AppConfig($httpProvider, $stateProvider, $locationProvider, $urlRouterP
 
 exports.default = AppConfig;
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var AppConstants = {
-  api: 'http://localhost:3000/api',
+  // api: 'http://localhost:3000/api',
+  api: 'http://conduit.productionready.io/api',
   jwtKey: 'jwtToken',
   appName: 'Bach'
 };
 
 exports.default = AppConstants;
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 AppRun.$inject = ["AppConstants", "$rootScope"];
@@ -37971,18 +38082,21 @@ function AppRun(AppConstants, $rootScope) {
 
 exports.default = AppRun;
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 angular.module("templates", []).run(["$templateCache", function ($templateCache) {
-  $templateCache.put("auth/auth.html", "<div class=\"auth-page\">\n  <div class=\"container page\">\n    <div class=\"row\">\n\n      <div class=\"col-md-6 offset-md-3 col-xs-12\">\n        <h1 class=\"text-xs-center\" ng-bind=\"::$ctrl.authType\" style=\"text-transform:capitalize\"></h1>\n        <p class=\"text-xs-center\">\n          <a ui-sref=\"app.login\"\n            ng-show=\"$ctrl.authType === \'register\'\">\n            Have an account?\n          </a>\n          <a ui-sref=\"app.register\"\n            ng-show=\"$ctrl.authType === \'login\'\">\n            Need an account?\n          </a>\n        </p>\n\n        <form>\n          <fieldset>\n\n            <fieldset class=\"form-group\">\n              <input class=\"form-control form-control-lg\"\n                type=\"text\"\n                placeholder=\"Username\"\n                ng-model=\"$ctrl.formData.username\" />\n            </fieldset>\n\n            <fieldset class=\"form-group\">\n              <input class=\"form-control form-control-lg\"\n                type=\"email\"\n                placeholder=\"Email\"\n                ng-model=\"$ctrl.formData.email\" />\n            </fieldset>\n\n            <fieldset class=\"form-group\">\n              <input class=\"form-control form-control-lg\"\n                type=\"password\"\n                placeholder=\"Password\"\n                ng-model=\"$ctrl.formData.password\" />\n            </fieldset>\n\n            <button class=\"btn btn-lg btn-primary pull-xs-right\"\n              type=\"submit\">\n              Register\n            </button>\n\n          </fieldset>\n        </form>\n      </div>\n\n    </div>\n  </div>\n</div>");
-  $templateCache.put("home/home.html", " <div class=\"home-page\">\n\n  <!-- Splash banner that only shows when not logged in -->\n  <div class=\"banner\" show-authed=\"false\">\n    <div class=\"container\">\n      <h1 class=\"logo-font\" ng-bind=\"::$ctrl.appName | lowercase\"></h1>\n      <p>A place to share your knowledge.</p>\n    </div>\n  </div>\n\n  <div class=\"container page\">\n    <div class=\"row\">\n\n\n      <!-- Main view - contains tabs & article list -->\n      <div class=\"col-md-9\">\n        <!-- Tabs for toggling between feed, article lists -->\n        <div class=\"feed-toggle\">\n          <ul class=\"nav nav-pills outline-active\">\n\n            <li class=\"nav-item\" show-authed=\"true\">\n              <a href=\"\" class=\"nav-link active\">\n                Your Feed\n              </a>\n            </li>\n\n            <li class=\"nav-item\">\n              <a href=\"\" class=\"nav-link\">\n                Global Feed\n              </a>\n            </li>\n\n          </ul>\n        </div>\n\n        <!-- List the current articles -->\n        <div class=\"article-preview\">\n          <div class=\"article-meta\">\n            <a href=\"\"><img /></a>\n            <div class=\"info\">\n              <a href=\"\" class=\"author\">BradGreen</a>\n              <span class=\"date\">January 20th</span>\n            </div>\n            <button class=\"btn btn-outline-primary btn-sm pull-xs-right\">\n              <i class=\"ion-heart\"></i> 29\n            </button>\n          </div>\n          <a href=\"\" class=\"preview-link\">\n            <h1>How to build Angular apps that scale</h1>\n            <p>Building web applications is not an easy task. It\'s even hard to make ones that scale.</p>\n            <span>Read more...</span>\n            <ul class=\"tag-list\">\n              <li class=\"tag-default tag-pill tag-outline\">programming</li>\n              <li class=\"tag-default tag-pill tag-outline\">web</li>\n            </ul>\n          </a>\n        </div>\n\n      </div>\n\n      <!-- Sidebar where popular tags are listed -->\n      <div class=\"col-md-3\">\n        <div class=\"sidebar\">\n\n          <p>Popular Tags</p>\n\n          <div class=\"tag-list\">\n            <a href=\"\" class=\"tag-default tag-pill\">\n              Tag One\n            </a>\n            <a href=\"\" class=\"tag-default tag-pill\">\n              Tag Two\n            </a>\n          </div>\n\n        </div>\n      </div>\n\n      <!-- End the row & container divs -->\n    </div>\n  </div>\n\n</div>\n");
-  $templateCache.put("layout/app-view.html", "<app-header></app-header>\n\n<div ui-view></div>\n\n<app-footer></app-footer>\n");
-  $templateCache.put("layout/footer.html", "<footer>\n  <div class=\"container\">\n    <a class=\"logo-font\" ui-sref=\"app.home\" ng-bind=\"::$ctrl.appName | lowercase\"></a>\n    <span class=\"attribution\">\n      &copy; {{::$ctrl.date | date:\'yyyy\'}}.\n      Designed by Nikos Konstantinidis. Code Licensed under MIT\n    </span>\n  </div>\n</footer>\n");
-  $templateCache.put("layout/header.html", "<nav class=\"navbar navbar-light\">\n  <div class=\"container\">\n\n    <a class=\"navbar-brand\"\n      ui-sref=\"app.home\"\n      ng-bind=\"::$ctrl.appName | lowercase\">\n    </a>\n\n    <!-- Show this for logged out users -->\n    <ul show-authed=\"false\"\n      class=\"nav navbar-nav pull-xs-right\">\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.login\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Login</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.register\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Register</button>\n        </a>\n      </li>\n\n    </ul>\n\n    <!-- Show this for logged in users -->\n    <ul show-authed=\"true\"\n      class=\"nav navbar-nav pull-xs-right\">\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.home\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Home</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.newtest\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">New Test</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.settings\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Settings</button>\n        </a>\n      </li>\n\n      <li class=\"nav-item\">\n        <a class=\"nav-link\"\n          ui-sref-active=\"active\"\n          ui-sref=\"app.profile({ username: $ctrl.currentUser.username})\">\n          <button class=\"btn\" \"btn-primary\" type=\"button\">{{ $ctrl.currentUser.username }}</button>\n        </a>\n      </li>\n\n    </ul>\n\n\n  </div>\n</nav>\n");
+  $templateCache.put("auth/auth.html", "<div class=\"auth-page\">\r\n  <div class=\"container page\">\r\n    <div class=\"row\">\r\n\r\n      <div class=\"col-md-6 offset-md-3 col-xs-12\">\r\n        <h1 class=\"text-xs-center\" ng-bind=\"::$ctrl.authType\" style=\"text-transform:capitalize\"></h1>\r\n        <p class=\"text-xs-center\">\r\n          <a ui-sref=\"app.login\"\r\n            ng-show=\"$ctrl.authType === \'register\'\">\r\n            Have an account?\r\n          </a>\r\n          <a ui-sref=\"app.register\"\r\n            ng-show=\"$ctrl.authType === \'login\'\">\r\n            Need an account?\r\n          </a>\r\n        </p>\r\n\r\n        <!-- We are going to call the component list-errors\r\n        we are passing the errors attribute which access the $ctrl.errors -->\r\n        <list-errors errors=\"$ctrl.errors\"></list-errors>\r\n\r\n        <form ng-submit=\"$ctrl.submitForm()\">\r\n          <fieldset ng-disabled=\"$ctrl.isSubmitting\">\r\n\r\n\r\n            <fieldset \r\n              class=\"form-group\" \r\n              ng-show=\"$ctrl.authType === \'register\'\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"text\"\r\n                placeholder=\"Username\"\r\n                ng-model=\"$ctrl.formData.username\" />\r\n            </fieldset>\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"email\"\r\n                placeholder=\"Email\"\r\n                ng-model=\"$ctrl.formData.email\" />\r\n            </fieldset>\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"password\"\r\n                placeholder=\"Password\"\r\n                ng-model=\"$ctrl.formData.password\" />\r\n            </fieldset>\r\n\r\n            <button \r\n              class=\"btn btn-lg btn-primary pull-xs-right\"\r\n              type=\"submit\" \r\n              ng-bind=\"::$ctrl.authType\" \r\n              style=\"text-transform:capitalize\">\r\n            </button>\r\n\r\n          </fieldset>\r\n        </form>\r\n      </div>\r\n\r\n    </div>\r\n  </div>\r\n</div>");
+  $templateCache.put("components/list-errors.html", "<ul class=\"error-messages\"\r\n  ng-show=\"$ctrl.errors\">\r\n    <div ng-repeat=\"(field, errors) in $ctrl.errors\">\r\n      <li ng-repeat=\"error in errors\">\r\n        {{field}} {{error}}\r\n      </li>\r\n    </div>\r\n  </ul>");
+  $templateCache.put("home/home.html", " <div class=\"home-page\">\r\n\r\n  <!-- Splash banner that only shows when not logged in -->\r\n  <div class=\"banner\" show-authed=\"false\">\r\n    <div class=\"container\">\r\n      <h1 class=\"logo-font\" ng-bind=\"::$ctrl.appName | lowercase\"></h1>\r\n      <p>A place to share your knowledge.</p>\r\n    </div>\r\n  </div>\r\n\r\n  <div class=\"container page\">\r\n    <div class=\"row\">\r\n\r\n\r\n      <!-- Main view - contains tabs & article list -->\r\n      <div class=\"col-md-9\">\r\n        <!-- Tabs for toggling between feed, article lists -->\r\n        <div class=\"feed-toggle\">\r\n          <ul class=\"nav nav-pills outline-active\">\r\n\r\n            <li class=\"nav-item\" show-authed=\"true\">\r\n              <a href=\"\" class=\"nav-link active\">\r\n                Your Feed\r\n              </a>\r\n            </li>\r\n\r\n            <li class=\"nav-item\">\r\n              <a href=\"\" class=\"nav-link\">\r\n                Global Feed\r\n              </a>\r\n            </li>\r\n\r\n          </ul>\r\n        </div>\r\n\r\n        <!-- List the current articles -->\r\n        <div class=\"article-preview\">\r\n          <div class=\"article-meta\">\r\n            <a href=\"\"><img /></a>\r\n            <div class=\"info\">\r\n              <a href=\"\" class=\"author\">BradGreen</a>\r\n              <span class=\"date\">January 20th</span>\r\n            </div>\r\n            <button class=\"btn btn-outline-primary btn-sm pull-xs-right\">\r\n              <i class=\"ion-heart\"></i> 29\r\n            </button>\r\n          </div>\r\n          <a href=\"\" class=\"preview-link\">\r\n            <h1>How to build Angular apps that scale</h1>\r\n            <p>Building web applications is not an easy task. It\'s even hard to make ones that scale.</p>\r\n            <span>Read more...</span>\r\n            <ul class=\"tag-list\">\r\n              <li class=\"tag-default tag-pill tag-outline\">programming</li>\r\n              <li class=\"tag-default tag-pill tag-outline\">web</li>\r\n            </ul>\r\n          </a>\r\n        </div>\r\n\r\n      </div>\r\n\r\n      <!-- Sidebar where popular tags are listed -->\r\n      <div class=\"col-md-3\">\r\n        <div class=\"sidebar\">\r\n\r\n          <p>Popular Tags</p>\r\n\r\n          <div class=\"tag-list\">\r\n            <a href=\"\" class=\"tag-default tag-pill\">\r\n              Tag One\r\n            </a>\r\n            <a href=\"\" class=\"tag-default tag-pill\">\r\n              Tag Two\r\n            </a>\r\n          </div>\r\n\r\n        </div>\r\n      </div>\r\n\r\n      <!-- End the row & container divs -->\r\n    </div>\r\n  </div>\r\n\r\n</div>\r\n");
+  $templateCache.put("layout/app-view.html", "<app-header></app-header>\r\n\r\n<div ui-view></div>\r\n\r\n<app-footer></app-footer>\r\n");
+  $templateCache.put("layout/footer.html", "<footer>\r\n  <div class=\"container\">\r\n    <a class=\"logo-font\" ui-sref=\"app.home\" ng-bind=\"::$ctrl.appName | lowercase\"></a>\r\n    <span class=\"attribution\">\r\n      &copy; {{::$ctrl.date | date:\'yyyy\'}}.\r\n      Designed by Nikos Konstantinidis. Code Licensed under MIT\r\n    </span>\r\n  </div>\r\n</footer>\r\n");
+  $templateCache.put("layout/header.html", "<nav class=\"navbar navbar-light\">\r\n  <div class=\"container\">\r\n\r\n    <a class=\"navbar-brand\"\r\n      ui-sref=\"app.home\"\r\n      ng-bind=\"::$ctrl.appName | lowercase\">\r\n    </a>\r\n\r\n    <!-- Show this for logged out users -->\r\n    <ul show-authed=\"false\"\r\n      class=\"nav navbar-nav pull-xs-right\">\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.login\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Login</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.register\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Register</button>\r\n        </a>\r\n      </li>\r\n\r\n    </ul>\r\n\r\n    <!-- Show this for logged in users -->\r\n    <ul show-authed=\"true\"\r\n      class=\"nav navbar-nav pull-xs-right\">\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.home\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Home</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.testeditor\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Test Editor</button>\r\n        </a>\r\n      </li>\r\n\r\n      <li class=\"nav-item\">\r\n        <a class=\"nav-link\"\r\n          ui-sref-active=\"active\"\r\n          ui-sref=\"app.settings\">\r\n          <button class=\"btn\" \"btn-primary\" type=\"button\">Settings</button>\r\n        </a>\r\n      </li>\r\n\r\n    </ul>\r\n\r\n\r\n  </div>\r\n</nav>\r\n");
+  $templateCache.put("settings/settings.html", "<div class=\"settings-page\">\r\n  <div class=\"container page\">\r\n    <div class=\"row\">\r\n      <div class=\"col-md-6 offset-md-3 col-xs-12\">\r\n\r\n        <h1 class=\"text-xs-center\">Your Settings</h1>\r\n\r\n<!-- we are able to hook at the errors without adding any additional functionality, as we have an error component pre created -->\r\n        <list-errors errors=\"$ctrl.errors\"></list-errors>\r\n\r\n        <form ng-submit=\"$ctrl.submitForm()\">\r\n          <fieldset ng-disabled=\"$ctrl.isSubmitting\">\r\n\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"text\"\r\n                placeholder=\"Username\"\r\n                ng-model=\"$ctrl.formData.username\" />\r\n            </fieldset>\r\n\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"email\"\r\n                placeholder=\"Email\"\r\n                ng-model=\"$ctrl.formData.email\" />\r\n            </fieldset>\r\n\r\n            <fieldset class=\"form-group\">\r\n              <input class=\"form-control form-control-lg\"\r\n                type=\"password\"\r\n                placeholder=\"New Password\"\r\n                ng-model=\"$ctrl.formData.password\" />\r\n            </fieldset>\r\n\r\n            <button class=\"btn btn-lg btn-primary pull-xs-right\"\r\n              type=\"submit\">\r\n              Update Settings\r\n            </button>\r\n\r\n          </fieldset>\r\n        </form>\r\n\r\n        <!-- Line break for logout button -->\r\n        <hr />\r\n\r\n        <button class=\"btn btn-outline-danger\"\r\n          ng-click=\"$ctrl.logout()\">\r\n          Or click here to logout.\r\n        </button>\r\n\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>\r\n");
+  $templateCache.put("testeditor/testeditor.html", "<div class=\"testeditor-page\">\r\n  <div class=\"container page\">\r\n    <div class=\"row\">\r\n      <div class=\"col-md-10 offset-md-1 col-xs-12\">\r\n\r\n        <h1 class=\"text-xs-center\">Test Editor</h1>\r\n\r\n        <list-errors errors=\"$ctrl.errors\"></list-errors>\r\n\r\n\r\n        <form>\r\n          <!-- TODO! create is submitting controller -->\r\n          <fieldset ng-disabled=\"$ctrl.isSubmitting\">\r\n\r\n            <fieldset class=\"form-group\">\r\n              <!-- TODO! create is article title (test title) controller -->\r\n              <input class=\"form-control form-control-lg\"\r\n                ng-model=\"$ctrl.article.title\"\r\n                type=\"text\"\r\n                placeholder=\"Test Title\" />\r\n            </fieldset>\r\n\r\n            <!--\r\n            http://jsfiddle.net/micaz/zdemywk2/4/\r\n            http://plnkr.co/edit/60GO0zhSGoEUm7tu6mbc?p=preview\r\n            -->\r\n\r\n            <fieldset>\r\n              <select name=\"browsers\"\r\n                      ng-model=\"$ctrl.browsers\">\r\n                <option value=\"\" disabled selected>Select</option>\r\n                <option ng-repeat=\"browser in $ctrl.options.browsers\" value=\"browser.value\">{{browser.name}}</option>\r\n              </select>\r\n            </fieldset>\r\n\r\n            <fieldset>\r\n              <select id=\"release\"\r\n                      ng-model=\"$ctrl.release\"\r\n                      ng-hide=\"!$ctrl.browsers\"\r\n                      ng-options=\"release for (release, environments) in $ctrl.environments\">\r\n                <option value=\"\" disabled selected>Select</option>\r\n              </select>\r\n            </fieldset>\r\n\r\n            <fieldset>\r\n              <select id=\"environment\"\r\n                      ng-model=\"$ctrl.environment\"\r\n                      ng-hide=\"!$ctrl.release\"\r\n                      ng-options=\"environment for (release, environment) in $ctrl.release\">\r\n                <option value=\"\" disabled selected>Select</option>\r\n              </select>\r\n            </fieldset>\r\n\r\n\r\n              <input type=\"text\"\r\n                     class=\"form-control form-control-md\"\r\n                     ng-model=\"$ctrl.filterText.$\"\r\n                     placeholder=\"Search Test\">\r\n\r\n            <div class=\"col-md-6 offset-md-3 col-xs-12\">\r\n              <fieldset class=\"form-group\">\r\n                <label ng-repeat=\"entry in $ctrl._TestEditor.entries\">\r\n                    <input type=\"checkbox\">\r\n                    <strong>Test case ID: </strong>{{entry.gsx$testcaseid.$t}} <br>\r\n                    <strong>Test case type: </strong>{{entry.gsx$type.$t}}\r\n                </label>\r\n              </fieldset>\r\n            </div>\r\n\r\n          </fieldset>\r\n        </form>\r\n\r\n\r\n        <button class=\"btn btn-lg pull-xs-right btn-primary\" type=\"button\" ng-click=\"$ctrl.submit()\">\r\n          Run Test\r\n        </button>\r\n\r\n\r\n\r\n\r\n\r\n\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>");
 }]);
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 HomeConfig.$inject = ["$stateProvider"];
@@ -37997,13 +38111,20 @@ function HomeConfig($stateProvider) {
     controller: 'HomeCtrl',
     controllerAs: '$ctrl',
     templateUrl: 'home/home.html',
-    title: 'Home'
+    title: 'Home',
+    resolve: {
+      // they can only access this route if they are logged in
+      // we ensure that they are logged in
+      auth: ["User", function auth(User) {
+        return User.ensureAuthIs(true);
+      }]
+    }
   });
 };
 
 exports.default = HomeConfig;
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38023,7 +38144,7 @@ HomeCtrl.$inject = ["AppConstants"];
 
 exports.default = HomeCtrl;
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38057,7 +38178,7 @@ homeModule.controller('HomeCtrl', _home4.default);
 
 exports.default = homeModule;
 
-},{"./home.config":13,"./home.controller":14,"angular":3}],16:[function(require,module,exports){
+},{"./home.config":15,"./home.controller":16,"angular":3}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38085,7 +38206,7 @@ var AppFooter = {
 
 exports.default = AppFooter;
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38110,7 +38231,7 @@ var AppHeader = {
 
 exports.default = AppHeader;
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38142,7 +38263,7 @@ layoutModule.component('appFooter', _footer2.default);
 
 exports.default = layoutModule;
 
-},{"./footer.component":16,"./header.component":17,"angular":3}],19:[function(require,module,exports){
+},{"./footer.component":18,"./header.component":19,"angular":3}],21:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38157,6 +38278,14 @@ var _user = require('./user.service');
 
 var _user2 = _interopRequireDefault(_user);
 
+var _jwt = require('./jwt.service');
+
+var _jwt2 = _interopRequireDefault(_jwt);
+
+var _testeditor = require('./testeditor.service');
+
+var _testeditor2 = _interopRequireDefault(_testeditor);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Create the module where our functionality can attach to
@@ -38164,9 +38293,98 @@ var servicesModule = _angular2.default.module('app.services', []);
 
 servicesModule.service('User', _user2.default);
 
+servicesModule.service('JWT', _jwt2.default);
+
+servicesModule.service('TestEditor', _testeditor2.default);
+
 exports.default = servicesModule;
 
-},{"./user.service":20,"angular":3}],20:[function(require,module,exports){
+},{"./jwt.service":22,"./testeditor.service":23,"./user.service":24,"angular":3}],22:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var JWT = function () {
+	JWT.$inject = ["AppConstants", "$window"];
+	function JWT(AppConstants, $window) {
+		'ngInject';
+
+		_classCallCheck(this, JWT);
+
+		this._AppConstants = AppConstants;
+		this._$window = $window;
+	}
+
+	_createClass(JWT, [{
+		key: 'save',
+		value: function save(token) {
+			this._$window.localStorage[this._AppConstants.jwtKey] = token;
+		}
+	}, {
+		key: 'get',
+		value: function get() {
+			return this._$window.localStorage[this._AppConstants.jwtKey];
+		}
+	}, {
+		key: 'destroy',
+		value: function destroy() {
+			this._$window.localStorage.removeItem(this._AppConstants.jwtKey);
+		}
+	}]);
+
+	return JWT;
+}();
+
+exports.default = JWT;
+
+},{}],23:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var testeditor = function testeditor(AppConstants, $http) {
+    'ngInject';
+
+    _classCallCheck(this, testeditor);
+
+    this._AppConstants = AppConstants;
+    this._$http = $http;
+    var testData = this;
+
+    this._$http({
+        method: 'GET',
+        // https://spreadsheets.google.com/feeds/list/1HW1vO4JpyGQ7fN7uJX4eX9vhrDJ3pQGGU24npSh8B6g/1/public/values?alt=json
+        url: 'https://api.myjson.com/bins/bslnx'
+    }).then(function (response) {
+        testData.entries = response.data.feed.entry;
+    }, function () {
+        alert("Error");
+    });
+
+    this.options = {
+        browsers: [{ value: 1, name: 'Chrome' }, { value: 2, name: 'Firefox' }, { value: 3, name: 'IE 11' }],
+        environments: {
+            'Release 1': ['R1-QA1', 'R1-QA2'],
+            'Release 2': ['R2-QA1', 'R2-QA2'],
+            'Release 3': ['R3-QA1', 'R3-QA2']
+        }
+    };
+};
+testeditor.$inject = ["AppConstants", "$http"];
+
+exports.default = testeditor;
+
+},{}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38178,14 +38396,17 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var User = function () {
-	User.$inject = ["AppConstants", "$http"];
-	function User(AppConstants, $http) {
+	User.$inject = ["JWT", "AppConstants", "$http", "$state", "$q"];
+	function User(JWT, AppConstants, $http, $state, $q) {
 		'ngInject';
 
 		_classCallCheck(this, User);
 
+		this._JWT = JWT;
 		this._AppConstants = AppConstants;
 		this._$http = $http;
+		this._$state = $state;
+		this._$q = $q;
 
 		// Object to store our user properties
 		// Starts as null until the user logs in
@@ -38198,16 +38419,95 @@ var User = function () {
 			var _this = this;
 
 			var route = type === 'login' ? '/login' : '';
-			return $http({
-				url: AppConstants.api + '/users' + route,
+			return this._$http({
+				url: this._AppConstants.api + '/users' + route,
 				method: 'POST',
 				data: {
 					user: credentials
 				}
 			}).then(function (res) {
+				// Set the JW Token on success
+				_this._JWT.save(res.data.user.token);
 				_this.current = res.data.user;
 
 				return res;
+			});
+		}
+	}, {
+		key: 'logout',
+		value: function logout() {
+			this.current = null;
+			this._JWT.destroy();
+			// Hard reload
+			this._$state.go(this._$state.$current, null, { reload: true });
+		}
+	}, {
+		key: 'verifyAuth',
+		value: function verifyAuth() {
+			var _this2 = this;
+
+			// $q is the promise that we are passing
+			var deferred = this._$q.defer();
+
+			// check for the JW token
+			if (!this._JWT.get()) {
+				deferred.resolve(false);
+				return deferred.promise;
+			}
+
+			if (this.current) {
+				deferred.resolve(true);
+			} else {
+				this._$http({
+					url: this._AppConstants.api + '/user',
+					method: 'GET'
+				}).then(function (res) {
+					_this2.current = res.data.user;
+					deferred.resolve(true);
+				},
+				// account for bad jw tokens
+				function (err) {
+					_this2._JWT.destroy();
+					deferred.resolve(false);
+				});
+			}
+
+			return deferred.promise;
+		}
+	}, {
+		key: 'ensureAuthIs',
+		value: function ensureAuthIs(bool) {
+			var _this3 = this;
+
+			var deferred = this._$q.defer();
+
+			this.verifyAuth().then(function (authValid) {
+				// if it's the opposite, redirect to the login page
+				if (authValid !== bool) {
+					_this3._$state.go('app.login');
+					deferred.resolve(false);
+				} else {
+					deferred.resolve(true);
+				}
+			});
+
+			return deferred.promise;
+		}
+
+		// Update the current user's name, email, password, etc
+
+	}, {
+		key: 'update',
+		value: function update(fields) {
+			var _this4 = this;
+
+			return this._$http({
+				url: this._AppConstants.api + '/user',
+				method: 'PUT',
+				data: { user: fields }
+			}).then(function (res) {
+				_this4.current = res.data.user;
+				return res.data.user;
 			});
 		}
 	}]);
@@ -38216,5 +38516,215 @@ var User = function () {
 }();
 
 exports.default = User;
+
+},{}],25:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _angular = require('angular');
+
+var _angular2 = _interopRequireDefault(_angular);
+
+var _settings = require('./settings.config');
+
+var _settings2 = _interopRequireDefault(_settings);
+
+var _settings3 = require('./settings.controller');
+
+var _settings4 = _interopRequireDefault(_settings3);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var settingsModule = _angular2.default.module('app.settings', []);
+
+// Include our UI-Router config settings
+
+settingsModule.config(_settings2.default);
+
+// Controllers
+
+settingsModule.controller('SettingsCtrl', _settings4.default);
+
+exports.default = settingsModule;
+
+},{"./settings.config":26,"./settings.controller":27,"angular":3}],26:[function(require,module,exports){
+'use strict';
+
+SettingsConfig.$inject = ["$stateProvider"];
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function SettingsConfig($stateProvider) {
+  'ngInject';
+
+  $stateProvider.state('app.settings', {
+    url: '/settings',
+    controller: 'SettingsCtrl',
+    controllerAs: '$ctrl',
+    templateUrl: 'settings/settings.html',
+    title: 'Settings',
+    resolve: {
+      // they can only access this route if they are logged in
+      // we ensure that they are logged in
+      auth: ["User", function auth(User) {
+        return User.ensureAuthIs(true);
+      }]
+    }
+  });
+};
+
+exports.default = SettingsConfig;
+
+},{}],27:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var SettingsCtrl = function () {
+  SettingsCtrl.$inject = ["User", "$state"];
+  function SettingsCtrl(User, $state) {
+    'ngInject';
+
+    _classCallCheck(this, SettingsCtrl);
+
+    this._User = User;
+    this._$state = $state;
+
+    this.formData = {
+      email: User.current.email,
+      bio: User.current.bio,
+      image: User.current.image,
+      username: User.current.username
+    };
+
+    // Bind is req'd because the logout method assumes
+    // the execution context is within the User object.
+    // this.logout = User.logout.bind(User);
+  }
+
+  _createClass(SettingsCtrl, [{
+    key: 'logout',
+    value: function logout() {
+      this._User.logout();
+    }
+  }, {
+    key: 'submitForm',
+    value: function submitForm() {
+      var _this = this;
+
+      this.isSubmitting = true;
+      this._User.update(this.formData).then(function (user) {
+        console.log('success!');
+        _this.isSubmitting = false;
+      }, function (err) {
+        _this.isSubmitting = false;
+        _this.errors = err.data.errors;
+      });
+    }
+  }]);
+
+  return SettingsCtrl;
+}();
+
+exports.default = SettingsCtrl;
+
+},{}],28:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _angular = require('angular');
+
+var _angular2 = _interopRequireDefault(_angular);
+
+var _testeditor = require('./testeditor.config');
+
+var _testeditor2 = _interopRequireDefault(_testeditor);
+
+var _testeditor3 = require('./testeditor.controller');
+
+var _testeditor4 = _interopRequireDefault(_testeditor3);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Create the module where our functionality can attach to
+var testeditorModule = _angular2.default.module('app.testeditor', []);
+
+// Include our UI-Router config settings
+
+testeditorModule.config(_testeditor2.default);
+
+// Controllers
+
+testeditorModule.controller('TestEditorCtrl', _testeditor4.default);
+
+exports.default = testeditorModule;
+
+},{"./testeditor.config":29,"./testeditor.controller":30,"angular":3}],29:[function(require,module,exports){
+'use strict';
+
+TestEditorConfig.$inject = ["$stateProvider"];
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function TestEditorConfig($stateProvider) {
+  'ngInject';
+
+  $stateProvider.state('app.testeditor', {
+    url: '/testeditor',
+    controller: 'TestEditorCtrl',
+    controllerAs: '$ctrl',
+    templateUrl: 'testeditor/testeditor.html',
+    title: 'New Test',
+    resolve: {
+      auth: ["User", function auth(User) {
+        return User.ensureAuthIs(true);
+      }]
+    }
+  });
+};
+
+exports.default = TestEditorConfig;
+
+},{}],30:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var TestEditorCtrl = function TestEditorCtrl(TestEditor, $state, $http) {
+    'ngInject';
+
+    _classCallCheck(this, TestEditorCtrl);
+
+    this._TestEditor = TestEditor;
+    this.options = this._TestEditor.options;
+    this.environments = this._TestEditor.options.environments;
+
+    this.test = {
+        title: '',
+        browser: '',
+        release: '',
+        environment: '',
+        testList: []
+    };
+};
+TestEditorCtrl.$inject = ["TestEditor", "$state", "$http"];
+
+exports.default = TestEditorCtrl;
 
 },{}]},{},[4]);

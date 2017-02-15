@@ -1,36 +1,24 @@
-<div class="auth-page">
+<div class="settings-page">
   <div class="container page">
     <div class="row">
-
       <div class="col-md-6 offset-md-3 col-xs-12">
-        <h1 class="text-xs-center" ng-bind="::$ctrl.authType" style="text-transform:capitalize"></h1>
-        <p class="text-xs-center">
-          <a ui-sref="app.login"
-            ng-show="$ctrl.authType === 'register'">
-            Have an account?
-          </a>
-          <a ui-sref="app.register"
-            ng-show="$ctrl.authType === 'login'">
-            Need an account?
-          </a>
-        </p>
 
-        <!-- We are going to call the component list-errors
-        we are passing the errors attribute which access the $ctrl.errors -->
+        <h1 class="text-xs-center">Your Settings</h1>
+
+<!-- we are able to hook at the errors without adding any additional functionality, as we have an error component pre created -->
         <list-errors errors="$ctrl.errors"></list-errors>
 
         <form ng-submit="$ctrl.submitForm()">
           <fieldset ng-disabled="$ctrl.isSubmitting">
 
 
-            <fieldset 
-              class="form-group" 
-              ng-show="$ctrl.authType === 'register'">
+            <fieldset class="form-group">
               <input class="form-control form-control-lg"
                 type="text"
                 placeholder="Username"
                 ng-model="$ctrl.formData.username" />
             </fieldset>
+
 
             <fieldset class="form-group">
               <input class="form-control form-control-lg"
@@ -42,21 +30,27 @@
             <fieldset class="form-group">
               <input class="form-control form-control-lg"
                 type="password"
-                placeholder="Password"
+                placeholder="New Password"
                 ng-model="$ctrl.formData.password" />
             </fieldset>
 
-            <button 
-              class="btn btn-lg btn-primary pull-xs-right"
-              type="submit" 
-              ng-bind="::$ctrl.authType" 
-              style="text-transform:capitalize">
+            <button class="btn btn-lg btn-primary pull-xs-right"
+              type="submit">
+              Update Settings
             </button>
 
           </fieldset>
         </form>
-      </div>
 
+        <!-- Line break for logout button -->
+        <hr />
+
+        <button class="btn btn-outline-danger"
+          ng-click="$ctrl.logout()">
+          Or click here to logout.
+        </button>
+
+      </div>
     </div>
   </div>
 </div>

@@ -7,7 +7,14 @@ function HomeConfig($stateProvider) {
     controller: 'HomeCtrl',
     controllerAs: '$ctrl',
     templateUrl: 'home/home.html',
-    title: 'Home'
+    title: 'Home',
+    resolve : {
+    // they can only access this route if they are logged in
+    // we ensure that they are logged in
+      auth: function(User) {
+        return User.ensureAuthIs(true);
+      }
+    }
   });
 
 };

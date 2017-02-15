@@ -1,0 +1,86 @@
+<div class="testeditor-page">
+  <div class="container page">
+    <div class="row">
+      <div class="col-md-10 offset-md-1 col-xs-12">
+
+        <h1 class="text-xs-center">Test Editor</h1>
+
+        <list-errors errors="$ctrl.errors"></list-errors>
+
+
+        <form>
+          <!-- TODO! create is submitting controller -->
+          <fieldset ng-disabled="$ctrl.isSubmitting">
+
+            <fieldset class="form-group">
+              <!-- TODO! create is article title (test title) controller -->
+              <input class="form-control form-control-lg"
+                ng-model="$ctrl.article.title"
+                type="text"
+                placeholder="Test Title" />
+            </fieldset>
+
+            <!--
+            http://jsfiddle.net/micaz/zdemywk2/4/
+            http://plnkr.co/edit/60GO0zhSGoEUm7tu6mbc?p=preview
+            -->
+
+            <fieldset>
+              <select name="browsers"
+                      ng-model="$ctrl.browsers">
+                <option value="" disabled selected>Select</option>
+                <option ng-repeat="browser in $ctrl.options.browsers" value="browser.value">{{browser.name}}</option>
+              </select>
+            </fieldset>
+
+            <fieldset>
+              <select id="release"
+                      ng-model="$ctrl.release"
+                      ng-hide="!$ctrl.browsers"
+                      ng-options="release for (release, environments) in $ctrl.environments">
+                <option value="" disabled selected>Select</option>
+              </select>
+            </fieldset>
+
+            <fieldset>
+              <select id="environment"
+                      ng-model="$ctrl.environment"
+                      ng-hide="!$ctrl.release"
+                      ng-options="environment for (release, environment) in $ctrl.release">
+                <option value="" disabled selected>Select</option>
+              </select>
+            </fieldset>
+
+
+              <input type="text"
+                     class="form-control form-control-md"
+                     ng-model="$ctrl.filterText.$"
+                     placeholder="Search Test">
+
+            <div class="col-md-6 offset-md-3 col-xs-12">
+              <fieldset class="form-group">
+                <label ng-repeat="entry in $ctrl._TestEditor.entries">
+                    <input type="checkbox">
+                    <strong>Test case ID: </strong>{{entry.gsx$testcaseid.$t}} <br>
+                    <strong>Test case type: </strong>{{entry.gsx$type.$t}}
+                </label>
+              </fieldset>
+            </div>
+
+          </fieldset>
+        </form>
+
+
+        <button class="btn btn-lg pull-xs-right btn-primary" type="button" ng-click="$ctrl.submit()">
+          Run Test
+        </button>
+
+
+
+
+
+
+      </div>
+    </div>
+  </div>
+</div>
