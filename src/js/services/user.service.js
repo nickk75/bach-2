@@ -12,7 +12,7 @@ export default class User {
 		// Starts as null until the user logs in
 		this.current = null;
 	}
-
+// type = login/register
 	attemptAuth(type, credentials) {
 		let route = (type === 'login') ? '/login' : '';
 		return this._$http({
